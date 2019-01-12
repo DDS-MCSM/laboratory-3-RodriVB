@@ -1,6 +1,6 @@
 ---
 title: "Answers Lab3"
-author: "You Name"
+author: "Rodrigo Vera"
 date: "12/6/2018"
 output: html_document
 ---
@@ -18,42 +18,102 @@ This is an R Markdown document including the solutions to the laboratory 3 for t
 Using the functions implemented in the file `code.R`.
 
 ```{r file_load, error=FALSE}
-# source("./code.R")
+source("./code.R")
 ```
 
 
 ### 1.1 Obtención de la página web
 
-```{r get_title, include=FALSE}
+Con la siguiente función se obtiene la página web:
 
+```{r get_title}
+PagWeb <- ObtenerWeb()
 ```
 
 
-### 1.2 Analisis de el contenido de la web
+### 1.2 Análisis del contenido de la web
 
-```{r web_content, include=FALSE}
+Se obtiene contenido de la página web con:
 
+```{r web_content}
+contenido <- ObtenerContenido(PagWeb$web_xml)
 ```
 
+Por ejemplo, el título de la página web es: **`r contenido$titulo`** y usa estas DNS: **`r contenido$dns`** 
+
+Se estudia la estructura y el contenido de los datos para su posterior análisis.
 
 ### 1.3.	Extracción de enlaces 
 
+Para listar los enlaces se utiliza la siguiente funcion:
 
-```{r get_links, include=FALSE}
-
+```{r get_links, include=TRUE}
+enlaces <- ObtenerEnlaces(PagWeb$web_xml)
 ```
 
+Obteniendo los siguientes enlaces
+
+```{r, echo=FALSE}
+head(enlaces, n=10)
+```
+
+Se muestran los 10 primeros enlaces de **`r length(enlaces$valor)`**
 
 ### 1.4 Exploración de enlaces
 
-```{r expl_links, include=FALSE}
+Para poder regularizar los enlaces, se utilizó:
 
+```{r expl_links, include=TRUE}
+enlaces_regulados <- RegularUrl(enlaces)
+url_raros <- UrlRaras(enlaces)
+```
+
+Obteniendo los siguientes enlaces regularizados:
+
+```{r, echo=FALSE}
+head(enlaces_regulados, n=3)
+```
+
+Se muestran los 10 primeros enlaces de **`r length(enlaces_regulados$valor)`**. De los cuales son **`r length(url_raros$valor)`** enlaces menos, porque son referenciales a una posición de una página, como se puede observar a continuacion:
+
+```{r, echo=FALSE}
+head(url_raros)
 ```
 
 ### Gráficos en R
 
 ### 2.1	Histograma
 
+Este es un histograma, que va en función de los dominios y el tipo de URL almacenado en la página
+
+```{r plot_histogram, include=TRUE}
+library(ggplot2)
+
+ggplot(data.frame(enlaces_regulados), aes(x=dominio,fill=tipo))  +
+  geom_bar() +
+  coord_flip() +
+  xlab("Dominio") +
+  ylab("Cantidad") +
+  ggtitle(paste0("Enlaces de ", contenido$titulo))
+```
+
 ### 2.2	Un gráfico de barras
 
+Con este grafico de barras se puede ver la relación entre el dominio y el tipo de URL de la página
+
+```{r, plot_bar, include=TRUE}
+ggplot(data=enlaces_regulados, aes(x=tipo, y=dominio, fill=tipo)) + 
+  geom_bar(stat="identity", position="dodge")+ guides(fill=FALSE)
+```
+
 ### 2.3 Pie Chart
+
+Con el siguiente grafico se puede observar el estado de los enlaces.
+
+```{r plot_piechart, include=TRUE}
+ggplot(enlaces_regulados, aes(x = factor(1), fill = factor(codigo_estado))) + 
+  geom_bar(width = 1) + coord_polar(theta = "y") + labs(fill="Codigo de respuesta") +
+  ggtitle("Estado de los enlaces") + xlab("") + ylab("")
+
+```
+
